@@ -79,7 +79,7 @@ while True:
 
         duration = datetime.timedelta(seconds=((timeStamp - lastTimeStamp).seconds))
 
-        workOutType = 'warm up' if int(rep) < 13 else 'training'
+        workOutType = 'warm up' if int(rep) > 12 else 'training'
         List = [timeStamp.strftime(timeFormatString), workout, weight, rep, workOutType, str(duration) ]
 
         lastRep = rep
