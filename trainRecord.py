@@ -2,22 +2,88 @@ import datetime
 import json
 import csv
 
-csvFileName = 'workouts.csv'
 
+
+csvFileName = 'workouts.csv'
+workoutOptionFileName = 'options.json'
 timeFormatString = "%Y-%m-%d %H:%M:%S"
 
-# get workout names and categories from options.json
 workoutNames = []
 categories = {}
-with open('options.json') as f:
-    data = json.load(f)
-    f.close()
-    for workoutRec in data['workouts']:
-        workoutNames.append(workoutRec['Name'])
-        for category in workoutRec['categories']:
-            if category not in categories.keys():
-                categories[category] = []
-            categories[category].append(workoutRec['Name'])
+optionJsonData = {}
+
+def readWorkoutOptions():
+    with open(workoutOptionFileName) as f:
+        global optionJsonData
+        optionJsonData = json.loads(f.read())
+        print(type(optionJsonData))
+        f.close()
+        for workoutRec in optionJsonData['workouts']:
+            workoutNames.append(workoutRec['Name'])
+            for category in workoutRec['categories']:
+                if category not in categories.keys():
+                    categories[category] = []
+                categories[category].append(workoutRec['Name'])
+
+def getLastWorkoutIdFromCsv()->int:
+    with open(csvFileName, 'r') as csvFile:
+        lstRec = list(csv.reader(csvFile))
+        csvFile.close()
+        if len(lstRec) > 0:
+            lastRec = lstRec[-1]
+            if lastRec[1] in workoutNames:
+                return workoutNames.index(lastRec[1])
+    return 0
+
+def selectWorkoutByCategory():
+    categoriesKeys = list(categories.keys())
+    for keyId in range(len(categoriesKeys)):
+        print(str(keyId) + ": " + categoriesKeys[keyId])
+
+    while True:
+        inVal = int(input('which category?'))
+        if (inVal >= len(categoriesKeys) or inVal < 0):
+            continue
+        selectedCat = categories[categoriesKeys[inVal]]
+        for id in range(len(selectedCat)):
+            print(str(id) + ": " + selectedCat[id])
+        inVal = int(input('which workout?'))
+        if (inVal >= len(selectedCat) or inVal < 0):
+            continue
+        workout = selectedCat[inVal]
+        workoutId = workoutNames.index(workout)
+        break
+    return workoutId, workout
+
+
+def selectWorkoutNumeric(inVal):
+    workoutId = int(inVal)
+    if workoutId < 0 or workoutId >= len(workoutNames):
+        raise ValueError("invalid id " + str(workoutId))
+    workout = workoutNames[workoutId]
+    return workoutId, workout
+
+
+def addWorkout(inVal):
+    if inVal in workoutNames:
+        workout = inVal
+        workoutId = workoutNames.index(workout)
+    else:
+        addConfirm = input('Add workout "' + inVal + '"?(N/y) ')
+        if addConfirm.lower() == 'y':
+            global optionJsonData
+            optionJsonData['workouts'].append({'Name': inVal, 'categories': []})
+            jObj = json.dumps(optionJsonData, indent=4)
+            with open('options.json', 'w') as f:
+                f.write(jObj)
+            workoutNames.append(inVal)
+            workout = inVal
+            workoutId = workoutNames.index(workout)
+        else:
+            raise NameError("user canceled")
+    return workoutId, workout
+
+readWorkoutOptions()
 
 # init last recorders
 lastWorkoutId = 0
@@ -25,13 +91,7 @@ lastWeight = '0'
 lastRep = '20'
 lastTimeStamp = datetime.datetime.now()
 
-# get last workout for default select
-with open(csvFileName, 'r') as csvFile:
-    lstRec = list(csv.reader(csvFile))
-    if len(lstRec) > 0:
-        lastRec = lstRec[-1]
-        if lastRec[1] in workoutNames:
-            lastWorkoutId = workoutNames.index(lastRec[1])
+lastWorkoutId = getLastWorkoutIdFromCsv()
 
 print("work out start at:" + lastTimeStamp.strftime(timeFormatString))
 
@@ -39,6 +99,8 @@ while True:
     # print workout options        
     for id in range(len(workoutNames)):
         print(str(id) + ": " + workoutNames[id])
+
+    # add first workout
 
     inVal = input("which work out? q:exit, c: select by category, or enter the workout name to search or add (" + str(lastWorkoutId) + ": " + workoutNames[lastWorkoutId] + ') ')
     # use last workout
@@ -50,42 +112,20 @@ while True:
         break
     # select by category 
     elif inVal == 'c':
-        categoriesKeys = list(categories.keys())
-        for keyId in range(len(categoriesKeys)):
-            print(str(keyId) + ": " + categoriesKeys[keyId])
-
-        while True:
-            inVal = int(input('which category?'))
-            if (inVal >= len(categoriesKeys) or inVal < 0):
-                continue
-            selectedCat = categories[categoriesKeys[inVal]]
-            for id in range(len(selectedCat)):
-                print(str(id) + ": " + selectedCat[id])
-            inVal = int(input('which workout?'))
-            if (inVal >= len(selectedCat) or inVal < 0):
-                continue
-            workout = selectedCat[inVal]
-            workoutId = workoutNames.index(workout)
-            break
+        workoutId, workout = selectWorkoutByCategory()
     # select from list
     elif inVal.isnumeric():
-        workoutId = int(inVal)
-        workout = workoutNames[workoutId]
+        try:
+            workoutId, workout = selectWorkoutNumeric(inVal)
+        except Exception as e:
+            print(e)
+            continue
     else:
-        if inVal not in workoutNames:
-            addConfirm = input('Add workout "' + inVal + '"?(N/y) ')
-            if addConfirm.lower() == 'y':
-                data['workouts'].append({'Name': inVal, 'categories': []})
-                with open('options.json', 'w') as f:
-                    json.dump(data, f)
-                    f.close()
-                workoutNames.append(inVal)
-
-            else:
-                continue
-
-        workout = inVal
-        workoutId = workoutNames.index(inVal)
+        try:
+            workoutId, workout = addWorkout(inVal)
+        except NameError as e:
+            print(e)
+            continue
 
     # get last same workout
     with open(csvFileName, 'r') as csvFile:
