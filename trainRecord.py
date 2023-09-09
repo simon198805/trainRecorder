@@ -2,8 +2,6 @@ import datetime
 import json
 import csv
 
-
-
 csvFileName = 'workouts.csv'
 workoutOptionFileName = 'options.json'
 timeFormatString = "%Y-%m-%d %H:%M:%S"
@@ -125,7 +123,7 @@ def getWeightAndRep(lastWeight, lastRep):
     return weight, rep
 
 
-def writeRecordToCsv(timeStamp, workout, weight, rep, lastTimeStamp):
+def printRecordAndWriteToCsv(timeStamp, workout, weight, rep, lastTimeStamp):
     duration = datetime.timedelta(seconds=((timeStamp - lastTimeStamp).seconds))
 
     workOutType = 'warm up' if int(rep) > 12 else 'training'
@@ -141,68 +139,70 @@ def writeRecordToCsv(timeStamp, workout, weight, rep, lastTimeStamp):
         csv.writer(csvFile).writerow(List)
         csvFile.close()
 
+    print('>>>>>>"' + workout + '" ' + str(weight) + '(kg)x' + str(rep) + ', in ' + str(duration) + '@' + timeStamp.strftime(timeFormatString))
 
-readWorkoutOptions()
 
-# init last recorders
-lastWorkoutId = 0
-lastWeight = '0'
-lastRep = '20'
-lastTimeStamp = datetime.datetime.now()
+if __name__ == '__main__':
+    readWorkoutOptions()
 
-lastWorkoutId = getLastWorkoutIdFromCsv()
+    # init last recorders
+    lastWorkoutId = 0
+    lastWeight = '0'
+    lastRep = '20'
+    lastTimeStamp = datetime.datetime.now()
 
-print("work out start at:" + lastTimeStamp.strftime(timeFormatString))
+    lastWorkoutId = getLastWorkoutIdFromCsv()
 
-while True:
-    # print workout options        
-    for id in range(len(workoutNames)):
-        print(str(id) + ": " + workoutNames[id])
+    print("work out start at:" + lastTimeStamp.strftime(timeFormatString))
 
-    # add first workout
-
-    inVal = input("which work out? q:exit, c: select by category, or enter the workout name to search or add (" + str(lastWorkoutId) + ": " + workoutNames[lastWorkoutId] + ') ')
-    # use last workout
-    if inVal == '':
-        workoutId = lastWorkoutId
-        workout = workoutNames[workoutId]
-    # quit
-    elif inVal == 'q':
-        break
-    # select by category 
-    elif inVal == 'c':
-        workoutId, workout = selectWorkoutByCategory()
-    # select from list
-    elif inVal.isnumeric():
-        try:
-            workoutId, workout = selectWorkoutNumeric(inVal)
-        except Exception as e:
-            print(e)
-            continue
-    else:
-        try:
-            workoutId, workout = addWorkout(inVal)
-        except NameError as e:
-            print(e)
-            continue
-
-    # get last same workout
-    lastTimeStamp, lastRep, lastWeight = getLastSameWorkoutFromCsv(workout)
-
-    # get weight and rep
     while True:
-        try:
-            weight, rep = getWeightAndRep(lastWeight, lastRep)
-        except NameError as e:
-            print(e)
-            continue
-        
-        timeStamp = datetime.datetime.now()
-        writeRecordToCsv(timeStamp, workout, weight, rep, lastTimeStamp)
+        # print workout options        
+        for id in range(len(workoutNames)):
+            print(str(id) + ": " + workoutNames[id])
 
-        lastRep = rep
-        lastWeight = weight
-        lastWorkoutId = workoutId
-        lastTimeStamp = timeStamp
-        
-        print('>>>>>>"' + workout + '" ' + str(weight) + '(kg)x' + str(rep) + ', in ' + str(duration) + '@' + timeStamp.strftime(timeFormatString))
+        # add first workout
+
+        inVal = input("which work out? q:exit, c: select by category, or enter the workout name to search or add (" + str(lastWorkoutId) + ": " + workoutNames[lastWorkoutId] + ') ')
+        # use last workout
+        if inVal == '':
+            workoutId = lastWorkoutId
+            workout = workoutNames[workoutId]
+        # quit
+        elif inVal == 'q':
+            break
+        # select by category 
+        elif inVal == 'c':
+            workoutId, workout = selectWorkoutByCategory()
+        # select from list
+        elif inVal.isnumeric():
+            try:
+                workoutId, workout = selectWorkoutNumeric(inVal)
+            except Exception as e:
+                print(e)
+                continue
+        else:
+            try:
+                workoutId, workout = addWorkout(inVal)
+            except NameError as e:
+                print(e)
+                continue
+
+        # get last same workout
+        lastTimeStamp, lastRep, lastWeight = getLastSameWorkoutFromCsv(workout)
+
+        # get weight and rep
+        while True:
+            try:
+                weight, rep = getWeightAndRep(lastWeight, lastRep)
+            except NameError as e:
+                print(e)
+                continue
+            
+            timeStamp = datetime.datetime.now()
+            printRecordAndWriteToCsv(timeStamp, workout, weight, rep, lastTimeStamp)
+
+            lastRep = rep
+            lastWeight = weight
+            lastWorkoutId = workoutId
+            lastTimeStamp = timeStamp
+            
