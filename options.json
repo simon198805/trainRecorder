@@ -1,1 +1,82 @@
-{"workouts": [{"Name": "Flat bench press", "Categories": ["Chest"]}, {"Name": "Incline bench press", "Categories": ["Chest"]}, {"Name": "chest fly"}, {"Name": "lying Anterior deltoid", "Categories": ["Deltoid"]}, {"Name": "lying Intermediate deltoid", "Categories": ["Deltoid"]}, {"Name": "lying Posterior deltoid", "Categories": ["Deltoid"]}, {"Name": "lying 3-way deltoid", "Categories": ["Deltoid"]}, {"Name": "lying biceps and triceps", "Categories": ["Arm"]}, {"Name": "single arm dumbbell row", "Categories": ["Biceps"]}, {"Name": "bench single leg bridge", "Categories": ["Hips"]}, {"Name": "single leg dead lift", "Categories": ["Hips"]}, {"Name": "single leg squat"}, {"Name": "single arm dumbbell flat bench press", "Categories": ["Chest"]}]}
+{
+    "workouts": [
+        {
+            "Name": "Flat bench press",
+            "categories": [
+                "Chest"
+            ]
+        },
+        {
+            "Name": "Incline bench press",
+            "categories": [
+                "Chest"
+            ]
+        },
+        {
+            "Name": "chest fly",
+            "categories": [
+                "Chest"
+            ]
+        },
+        {
+            "Name": "lying Anterior deltoid",
+            "categories": [
+                "Deltoid"
+            ]
+        },
+        {
+            "Name": "lying Intermediate deltoid",
+            "categories": [
+                "Deltoid"
+            ]
+        },
+        {
+            "Name": "lying Posterior deltoid",
+            "categories": [
+                "Deltoid"
+            ]
+        },
+        {
+            "Name": "lying 3-way deltoid",
+            "categories": [
+                "Deltoid"
+            ]
+        },
+        {
+            "Name": "lying biceps and triceps",
+            "categories": [
+                "Arm"
+            ]
+        },
+        {
+            "Name": "single arm dumbbell row",
+            "categories": [
+                "Biceps"
+            ]
+        },
+        {
+            "Name": "bench single leg bridge",
+            "categories": [
+                "Hips"
+            ]
+        },
+        {
+            "Name": "single leg dead lift",
+            "categories": [
+                "Hips"
+            ]
+        },
+        {
+            "Name": "single leg squat",
+            "categories": [
+                "legs"
+            ]
+        },
+        {
+            "Name": "single arm dumbbell flat bench press",
+            "categories": [
+                "Chest"
+            ]
+        }
+    ]
+}

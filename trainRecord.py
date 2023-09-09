@@ -11,8 +11,15 @@ with open('options.json') as f:
     f.close()
 
 workoutNames = []
+categories = {}
 for workoutRec in data['workouts']:
     workoutNames.append(workoutRec['Name'])
+    for category in workoutRec['categories']:
+        if category not in categories.keys():
+            categories[category] = []
+        categories[category].append(workoutRec['Name'])
+
+print(categories)
 
 lastWorkoutId = 0
 lastWeight = '0'
@@ -41,7 +48,7 @@ while True:
         if inVal not in workoutNames:
             addConfirm = input('Add workout "' + inVal + '"?(N/y) ')
             if addConfirm.lower() == 'y':
-                data['workouts'].append({'Name': inVal, 'Categories': []})
+                data['workouts'].append({'Name': inVal, 'categories': []})
                 with open('options.json', 'w') as f:
                     json.dump(data, f)
                     f.close()
