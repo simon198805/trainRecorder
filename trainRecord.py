@@ -35,6 +35,7 @@ def getLastWorkoutIdFromCsv()->int:
                 return workoutNames.index(lastRec[1])
     return 0
 
+
 def selectWorkoutByCategory():
     categoriesKeys = list(categories.keys())
     for keyId in range(len(categoriesKeys)):
@@ -83,6 +84,64 @@ def addWorkout(inVal):
             raise NameError("user canceled")
     return workoutId, workout
 
+
+def getLastSameWorkoutFromCsv(workout):
+    with open(csvFileName, 'r') as csvFile:
+        for row in reversed(list(csv.reader(csvFile))):
+            if (len(row)) < 4:
+                # skip invalid row
+                continue
+            if row[1] == workout:
+                lastTimeStamp = datetime.datetime.strptime(row[0], timeFormatString)
+                lastSameWorkoutHrs = (datetime.datetime.now() - lastTimeStamp).total_seconds()/60/60
+                print("It's " + str(int(lastSameWorkoutHrs)) + ' hrs from last "' + workout + '"')
+                lastRep = row[3]
+                lastWeight = row[2]
+                return lastTimeStamp, lastRep, lastWeight
+
+
+def getWeightAndRep(lastWeight, lastRep):
+    weight = rep = ''
+
+    inputs = input("weight(Kg)?(" + lastWeight + '), q to select new workout. ')
+    # use last weight
+    if inputs == '':
+        inputs = lastWeight
+    if inputs == 'q':
+        raise NameError("user cancel")
+
+    inputs = inputs.split()       
+    weight = inputs[0]
+
+    if len(inputs) == 2:
+        rep = inputs[1]
+
+    if rep == '':
+        rep = input("rep?(" + lastRep + ") ")
+        if rep == '':
+            rep = lastRep
+        if rep == 'q':
+            raise NameError("user cancel")
+    return weight, rep
+
+
+def writeRecordToCsv(timeStamp, workout, weight, rep, lastTimeStamp):
+    duration = datetime.timedelta(seconds=((timeStamp - lastTimeStamp).seconds))
+
+    workOutType = 'warm up' if int(rep) > 12 else 'training'
+    List = [timeStamp.strftime(timeFormatString),  # 0
+            workout,                               # 1
+            weight,                                # 2
+            rep,                                   # 3
+            workOutType,                           # 4
+            str(duration)]                         # 5
+
+    # append record to workout.csv
+    with open(csvFileName, 'a') as csvFile:
+        csv.writer(csvFile).writerow(List)
+        csvFile.close()
+
+
 readWorkoutOptions()
 
 # init last recorders
@@ -128,63 +187,22 @@ while True:
             continue
 
     # get last same workout
-    with open(csvFileName, 'r') as csvFile:
-        for row in reversed(list(csv.reader(csvFile))):
-            if (len(row)) < 4:
-                continue
-            if row[1] == workout:
-                lastTimeStamp = datetime.datetime.strptime(row[0], timeFormatString)
-                lastSameWorkoutHrs = (datetime.datetime.now() - lastTimeStamp).total_seconds()/60/60
-                print("It's " + str(int(lastSameWorkoutHrs)) + ' hrs from last "' + workout + '"')
-                lastRep = row[3]
-                lastWeight = row[2]
-                break
+    lastTimeStamp, lastRep, lastWeight = getLastSameWorkoutFromCsv(workout)
 
     # get weight and rep
     while True:
-        weight = rep = ''
-
-        inputs = input("weight(Kg)?(" + lastWeight + '), q to select new workout. ')
-        # use last weight
-        if inputs == '':
-            inputs = lastWeight
-        if inputs == 'q':
-            break
-
-        inputs = inputs.split()       
-        weight = inputs[0]
-
-        if len(inputs) == 2:
-            rep = inputs[1]
-
-        if rep == '':
-            rep = input("rep?(" + lastRep + ") ")
-            if rep == '':
-                rep = lastRep
-            if rep == 'q':
-                break
-
+        try:
+            weight, rep = getWeightAndRep(lastWeight, lastRep)
+        except NameError as e:
+            print(e)
+            continue
+        
         timeStamp = datetime.datetime.now()
-
-        duration = datetime.timedelta(seconds=((timeStamp - lastTimeStamp).seconds))
-
-        workOutType = 'warm up' if int(rep) > 12 else 'training'
-        List = [timeStamp.strftime(timeFormatString),   # 0
-                 workout,                               # 1
-                 weight,                                # 2
-                 rep,                                   # 3
-                 workOutType,                           # 4
-                 str(duration) ]                        # 5
+        writeRecordToCsv(timeStamp, workout, weight, rep, lastTimeStamp)
 
         lastRep = rep
         lastWeight = weight
         lastWorkoutId = workoutId
         lastTimeStamp = timeStamp
-
-        # append record to workout.csv
-        with open(csvFileName, 'a') as csvFile:
-            csvWriter = csv.writer(csvFile)
-            csvWriter.writerow(List)
-            csvFile.close()
         
         print('>>>>>>"' + workout + '" ' + str(weight) + '(kg)x' + str(rep) + ', in ' + str(duration) + '@' + timeStamp.strftime(timeFormatString))
