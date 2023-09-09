@@ -8,13 +8,16 @@ timeFormatString = "%Y-%m-%d %H:%M:%S"
 
 workoutNames = []
 categories = {}
-optionJsonData = {}
+optionJsonData = {'workouts':[]}
 
 def readWorkoutOptions():
     with open(workoutOptionFileName) as f:
         global optionJsonData
-        optionJsonData = json.loads(f.read())
-        print(type(optionJsonData))
+        try:
+            optionJsonData = json.loads(f.read())
+        except Exception as e:
+            print(e)
+            return
         f.close()
         for workoutRec in optionJsonData['workouts']:
             workoutNames.append(workoutRec['Name'])
@@ -156,11 +159,17 @@ def main():
     print("work out start at:" + lastTimeStamp.strftime(timeFormatString))
 
     while True:
+        # add first workout
+        while len(workoutNames) == 0:
+            inVal = input("please add first workout:")
+            try:
+                addWorkout(inVal)
+            except Exception as e:
+                print(e)
+
         # print workout options        
         for id in range(len(workoutNames)):
             print(str(id) + ": " + workoutNames[id])
-
-        # add first workout
 
         inVal = input("which work out? q:exit, c: select by category, or enter the workout name to search or add (" + str(lastWorkoutId) + ": " + workoutNames[lastWorkoutId] + ') ')
         # use last workout
