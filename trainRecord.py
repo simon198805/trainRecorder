@@ -1,6 +1,6 @@
 import datetime
 import json
-from csv import writer
+import csv
 
 csvFileName = 'workouts.csv'
 
@@ -52,7 +52,18 @@ while True:
 
         workout = inVal
         workoutId = workoutNames.index(inVal)
-        
+
+    # get last same workout
+    with open(csvFileName, 'r') as csvFile:
+        for row in reversed(list(csv.reader(csvFile))):
+            if row[1] == workout:
+                lastTimeStamp = datetime.datetime.strptime(row[0], timeFormatString)
+                lastSameWorkoutHrs = (datetime.datetime.now() - lastTimeStamp).total_seconds()/60/60
+                print("It's " + str(int(lastSameWorkoutHrs)) + ' hrs from last "' + workout + '"')
+                lastRep = row[3]
+                lastWeight = row[2]
+                break
+
     while True:
         weight = rep = ''
 
@@ -80,7 +91,12 @@ while True:
         duration = datetime.timedelta(seconds=((timeStamp - lastTimeStamp).seconds))
 
         workOutType = 'warm up' if int(rep) > 12 else 'training'
-        List = [timeStamp.strftime(timeFormatString), workout, weight, rep, workOutType, str(duration) ]
+        List = [timeStamp.strftime(timeFormatString),   # 0
+                 workout,                               # 1
+                 weight,                                # 2
+                 rep,                                   # 3
+                 workOutType,                           # 4
+                 str(duration) ]                        # 5
 
         lastRep = rep
         lastWeight = weight
@@ -88,7 +104,7 @@ while True:
         lastTimeStamp = timeStamp
 
         with open(csvFileName, 'a') as csvFile:
-            csvWriter = writer(csvFile)
+            csvWriter = csv.writer(csvFile)
             csvWriter.writerow(List)
             csvFile.close()
         
