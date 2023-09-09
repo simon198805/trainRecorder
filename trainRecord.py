@@ -41,7 +41,7 @@ while True:
         if inVal not in workoutNames:
             addConfirm = input('Add workout "' + inVal + '"?(N/y) ')
             if addConfirm.lower() == 'y':
-                data['workouts'].append({'Name': inVal})
+                data['workouts'].append({'Name': inVal, 'Categories': []})
                 with open('options.json', 'w') as f:
                     json.dump(data, f)
                     f.close()
@@ -56,6 +56,8 @@ while True:
     # get last same workout
     with open(csvFileName, 'r') as csvFile:
         for row in reversed(list(csv.reader(csvFile))):
+            if (len(row)) < 4:
+                continue
             if row[1] == workout:
                 lastTimeStamp = datetime.datetime.strptime(row[0], timeFormatString)
                 lastSameWorkoutHrs = (datetime.datetime.now() - lastTimeStamp).total_seconds()/60/60
