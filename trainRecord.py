@@ -108,7 +108,7 @@ def getWeightAndRep(lastWeight, lastRep):
     if inputs == 'q':
         raise NameError("user cancel")
 
-    inputs = inputs.split()       
+    inputs = inputs.split()
     weight = inputs[0]
 
     if len(inputs) == 2:
@@ -142,7 +142,7 @@ def printRecordAndWriteToCsv(timeStamp, workout, weight, rep, lastTimeStamp):
     print('>>>>>>"' + workout + '" ' + str(weight) + '(kg)x' + str(rep) + ', in ' + str(duration) + '@' + timeStamp.strftime(timeFormatString))
 
 
-if __name__ == '__main__':
+def main():
     readWorkoutOptions()
 
     # init last recorders
@@ -205,4 +205,7 @@ if __name__ == '__main__':
             lastWeight = weight
             lastWorkoutId = workoutId
             lastTimeStamp = timeStamp
-            
+
+
+if __name__ == '__main__':
+    main()
