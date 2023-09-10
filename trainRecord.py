@@ -37,24 +37,37 @@ def getLastWorkoutIdFromCsv()->int:
     return 0
 
 
+def printListWithId(targetList: list):
+    for id in range(len(targetList)):
+        print(str(id) + ": " + targetList[id])
+
+
+def selectFromList(targetList: list, msg: str):
+    printListWithId(targetList)
+    while True:
+        try:
+            inVal = int(input(msg))
+            return targetList[inVal]
+        except Exception as e:
+            print(e)
+
+
+def multiSelectFromList(targetList: list, msg: str):
+    printListWithId(targetList)
+    while True:
+        try:
+            inVal = input(msg + '(multi select)')
+            lstIn = int(inVal.split())
+            return targetList[lstIn]
+        except Exception as e:
+            print(e)
+
+
 def selectWorkoutByCategory():
     categoriesKeys = list(categories.keys())
-    for keyId in range(len(categoriesKeys)):
-        print(str(keyId) + ": " + categoriesKeys[keyId])
-
-    while True:
-        inVal = int(input('which category?'))
-        if (inVal >= len(categoriesKeys) or inVal < 0):
-            continue
-        selectedCat = categories[categoriesKeys[inVal]]
-        for id in range(len(selectedCat)):
-            print(str(id) + ": " + selectedCat[id])
-        inVal = int(input('which workout?'))
-        if (inVal >= len(selectedCat) or inVal < 0):
-            continue
-        workout = selectedCat[inVal]
-        workoutId = workoutNames.index(workout)
-        break
+    selectedCat = categories[categoriesKeys[selectFromList(categoriesKeys, 'which category?')]]
+    workout = selectFromList(selectedCat, 'which workout?')
+    workoutId = workoutNames.index(workout)
     return workoutId, workout
 
 
@@ -73,8 +86,11 @@ def addWorkout(inVal):
     else:
         addConfirm = input('Add workout "' + inVal + '"?(N/y) ')
         if addConfirm.lower() == 'y':
+            workoutCategories = multiSelectFromList(categories.keys(), 'Select category.')
+
             global optionJsonData
-            optionJsonData['workouts'].append({'Name': inVal, 'categories': []})
+            optionJsonData['workouts'].append({'Name': inVal, 'categories': workoutCategories})
+
             jObj = json.dumps(optionJsonData, indent=4)
             with open('options.json', 'w') as f:
                 f.write(jObj)
