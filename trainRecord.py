@@ -183,7 +183,7 @@ def printCategoriesWithLastWorkoutDelta():
             try:
                 lastWorkoutDate = getClosestWorkoutDateInCsv(workout)
             except Exception as e:
-                print(e)
+                #print(e)
                 continue
             if catDatetime > lastWorkoutDate:
                 catDatetime = lastWorkoutDate
@@ -206,7 +206,7 @@ def selectCategory() -> str:
             inVal = selectFromList(catKeys, 'which category?', lastSelectCat, printList=False)
             if processSelectorChange(inVal):
                 raise UserCancelException
-            if type(inVal) is int:
+            if type(inVal) == int:
                 lastSelectCat = catKeys[int(inVal)]
                 return lastSelectCat
             else:
@@ -218,13 +218,21 @@ def selectCategory() -> str:
         except Exception as e:
             print(e)
 
+
 def selectWorkoutByCategory():
     global workoutSelector
     cat = selectCategory()
     selectedCatWorkouts = categories[cat]
-    workout = selectFromList(selectedCatWorkouts, 'which workout?')
-    workoutId = workoutNames.index(workout)
-    return workoutId, workout
+    while True:
+        inVal = selectFromList(selectedCatWorkouts, 'which workout?')
+        if type(inVal) == int:
+            workout = selectedCatWorkouts[inVal]
+            workoutId = workoutNames.index(workout)
+            return workoutId, workout
+        elif processSelectorChange(inVal):
+            raise UserCancelException
+        else:
+            return addWorkout(inVal)
 
 
 def selectSelector():
@@ -293,7 +301,7 @@ def getLastSameWorkoutFromCsv(workout):
                 lastRep = row[3]
                 lastWeight = row[2]
                 return lastTimeStamp, lastRep, lastWeight
-
+    raise ValueError('no last record found for "' + workout + '"')
 
 def getWeightAndRep(lastWeight, lastRep):
     weight = rep = ''
@@ -403,7 +411,10 @@ def main():
             continue
 
         # get last same workout
-        lastTimeStamp, lastRep, lastWeight = getLastSameWorkoutFromCsv(workout)
+        try:
+            lastTimeStamp, lastRep, lastWeight = getLastSameWorkoutFromCsv(workout)
+        except Exception as e:
+            print(e)
 
         # get weight and rep
         while True:
