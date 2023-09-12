@@ -190,7 +190,7 @@ def printCategoriesWithLastWorkoutDelta():
         id += 1
 
 
-def selectCategory() -> int:
+def selectCategory() -> str:
     """select category. if input category name, will ask if add category
 
     Returns:
@@ -199,21 +199,24 @@ def selectCategory() -> int:
     while True:
         try:
             printCategoriesWithLastWorkoutDelta()
-            inVal = selectFromList(list(categories.keys()), 'which category?', printList=False)
+            catKeys = list(categories.keys())
+            inVal = selectFromList(catKeys, 'which category?', printList=False)
             if processSelectorChange(inVal):
                 raise UserCancelException
             if type(inVal) is int:
-                categories[int(inVal)]
-                return int(inVal)
+                return catKeys[int(inVal)]
             else:
                 if(input('Category ' + inVal + 'does not exist, add it?(N/y)') == 'y'):
                     addCategory(inVal)
+                    return inVal
         except UserCancelException as e: raise
         except Exception as e:
             print(e)
 
 def selectWorkoutByCategory():
+    global workoutSelector
     cat = selectCategory()
+    workoutSelector = cat
     selectedCatWorkouts = categories[cat]
     workout = selectFromList(selectedCatWorkouts, 'which workout?')
     workoutId = workoutNames.index(workout)
