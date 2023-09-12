@@ -2,6 +2,7 @@ import datetime
 import json
 import csv
 
+
 class UserCancelException(Exception):
     "User cancel"
     pass
@@ -151,28 +152,30 @@ def addCategory(catName:str):
         categories[catName] = []
 
 
-def processSelectorChange(inVal) -> bool:
-    """Check if input is for special process
+def processSelectorChange(inVal):
+    """check in input value is process control string
 
     Args:
-        inVal (_type_): user input
+        inVal (_type_): input valus
 
-    Returns:
-        bool: selector has been changed
+    Raises:
+        UserCancelException: user cancel the process by select special options in input
     """
-    if type(inVal) is not str:
-        return False
-    lVal = inVal.lower()
-    if lVal == 'q':
-        selectSelector = 'selector'
-        return True
-    elif lVal == 'c':
-        selectSelector = 'category'
-        return True
-    elif lVal == 'f':
-        selectSelector = 'fullList'
-        return True
-    return False
+    global workoutSelector
+
+    if not isinstance(inVal, str):
+        return
+    lowerVal = inVal.lower()
+    if lowerVal == 'q':
+        workoutSelector = 'selector'
+        raise UserCancelException
+    elif lowerVal == 'c':
+        workoutSelector = 'category'
+        raise UserCancelException
+    elif lowerVal == 'f':
+        workoutSelector = 'fullList'
+        raise UserCancelException
+    return
 
 
 def printCategoriesWithLastWorkoutDelta():
@@ -204,13 +207,12 @@ def selectCategory() -> str:
             printCategoriesWithLastWorkoutDelta()
             catKeys = list(categories.keys())
             inVal = selectFromList(catKeys, 'which category?', lastSelectCat, printList=False)
-            if processSelectorChange(inVal):
-                raise UserCancelException
-            if type(inVal) == int:
+            processSelectorChange(inVal)
+            if isinstance(inVal, int):
                 lastSelectCat = catKeys[int(inVal)]
                 return lastSelectCat
             else:
-                if(input('Category ' + inVal + 'does not exist, add it?(N/y)') == 'y'):
+                if (input('Category ' + inVal + 'does not exist, add it?(N/y)') == 'y'):
                     addCategory(inVal)
                     lastSelectCat = inVal
                     return inVal
@@ -225,27 +227,30 @@ def selectWorkoutByCategory():
     selectedCatWorkouts = categories[cat]
     while True:
         inVal = selectFromList(selectedCatWorkouts, 'which workout?')
+        processSelectorChange(inVal)
         if type(inVal) == int:
             workout = selectedCatWorkouts[inVal]
             workoutId = workoutNames.index(workout)
             return workoutId, workout
-        elif processSelectorChange(inVal):
-            raise UserCancelException
         else:
             return addWorkout(inVal)
 
 
 def selectSelector():
+    global workoutSelector
     lstSelectors = ['category', 'fullList', 'add']
-    selectFromList(lstSelectors, 'Select workout selector:')
+    try:
+        workoutSelector = lstSelectors[selectFromList(lstSelectors, 'Select workout selector:')]
+    except Exception as e:
+        pass
 
 
-def selectWorkout():
+def selectWorkout(lastWorkout):
     while True:
         if workoutSelector == 'category':
             return selectWorkoutByCategory()
         elif workoutSelector == 'fullList':
-            return selectWorkoutNumeric()
+            return selectWorkoutInFullList(lastWorkout)
         elif workoutSelector == 'add':
             return askAddWorkout()
         else:
@@ -347,34 +352,31 @@ def printRecordAndWriteToCsv(timeStamp, workout, weight, rep, lastTimeStamp):
     print('>>>>>>"' + workout + '" ' + str(weight) + '(kg)x' + str(rep) + ', in ' + str(duration) + '@' + timeStamp.strftime(timeFormatString))
 
 
-def selectWorkoutInFullList(lastWorkoutId: int):
+def selectWorkoutInFullList(lastWorkout):
     # print workout options
     printListWithId(workoutNames) 
-
-    inVal = input("which work out? q:exit, c: select by category, or enter the workout name to search or add (" + str(lastWorkoutId) + ": " + workoutNames[lastWorkoutId] + ') ')
+    lastWorkoutValid = False
+    lastWrokoutStr = ''
+    try:
+        lastWorkoutId = workoutNames.index(lastWorkout)
+        lastWorkoutValid = True
+        lastWrokoutStr = ' (' + str(lastWorkoutId) + ': ' + lastWorkout + ')'
+    except Exception as e:
+        pass   
+    inVal = input('Which work out? q:exit, c: select by category, or enter the workout name to search or add' + lastWrokoutStr)
+    processSelectorChange(inVal)
     # use last workout
     if inVal == '':
-        workoutId = lastWorkoutId
-        workout = workoutNames[workoutId]
-    # quit
-    elif inVal == 'q':
-        return
-    # select by category 
-    elif inVal == 'c':
-        workoutId, workout = selectWorkoutByCategory()
-    # select from list
+        if lastWorkoutValid:
+            workoutId = lastWorkoutId
+            workout = lastWorkout
+        else:
+            raise ValueError("last workout is invalid")
     elif inVal.isnumeric():
         workoutId, workout = selectWorkoutNumeric(inVal)
     else:
         workoutId, workout = addWorkout(inVal)
     return workoutId, workout
-
-
-def selectWorkout(lastWorkoutId: int, categoryFilterDisplay: str):
-    if categoryFilterDisplay == '':
-        selectWorkoutInFullList(lastWorkoutId)
-    else:
-        selectWorkoutByCategory
 
 
 def checkIfThereIsNoWorkout():
@@ -390,7 +392,7 @@ def main():
     readWorkoutOptions()
 
     # init last recorders
-    lastWorkoutId = 0
+    lastWorkout = ''
     lastWeight = '0'
     lastRep = '20'
     lastTimeStamp = datetime.datetime.now()
@@ -400,16 +402,16 @@ def main():
 
     print("work out start at:" + lastTimeStamp.strftime(timeFormatString))
 
-    while True:
-        # add first workout
-        checkIfThereIsNoWorkout()
-        
+    # add first workout
+    checkIfThereIsNoWorkout()
+    
+    while True:    
         try:
-            workoutId, workout = selectWorkoutInFullList(lastWorkoutId)
-        except Exception as e:
-            print(e)
+            workoutId, workout = selectWorkout(lastWorkout)
+        except UserCancelException as e:
             continue
 
+        lastWorkout = workout
         # get last same workout
         try:
             lastTimeStamp, lastRep, lastWeight = getLastSameWorkoutFromCsv(workout)
@@ -429,7 +431,6 @@ def main():
 
             lastRep = rep
             lastWeight = weight
-            lastWorkoutId = workoutId
             lastTimeStamp = timeStamp
 
 
