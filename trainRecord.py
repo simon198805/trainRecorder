@@ -17,8 +17,10 @@ optionJsonData = {'workouts': []}
 workoutSelector = 'category'
 lastSelectCat = ''
 
-def getDatetimeFromStr(strDatetime:str) -> datetime.datetime:
-    return datetime.datetime.strptime(strDatetime, timeFormatString)
+
+def getDatetimeFromStr(inVal: str) -> datetime.datetime:
+    return datetime.datetime.strptime(inVal, timeFormatString)
+
 
 def readWorkoutOptions():
     with open(workoutOptionFileName) as f:
@@ -48,15 +50,15 @@ def getClosestWorkoutDateInCsv(workout) -> datetime.datetime:
         raise ValueError('workout "' + workout + '" not found')
 
 
-def getLastWorkoutIdFromCsv()->int:
+def getLastWorkoutFromCsv():
     with open(csvFileName, 'r') as csvFile:
         lstRec = list(csv.reader(csvFile))
         csvFile.close()
         if len(lstRec) > 0:
             lastRec = lstRec[-1]
             if lastRec[1] in workoutNames:
-                return workoutNames.index(lastRec[1])
-    return 0
+                return lastRec[1]
+    return ''
 
 
 def printListWithId(targetList: list):
@@ -392,13 +394,10 @@ def main():
     readWorkoutOptions()
 
     # init last recorders
-    lastWorkout = ''
+    lastWorkout = getLastWorkoutFromCsv()
     lastWeight = '0'
     lastRep = '20'
     lastTimeStamp = datetime.datetime.now()
-    categoryFilterDisplay = ''
-
-    lastWorkoutId = getLastWorkoutIdFromCsv()
 
     print("work out start at:" + lastTimeStamp.strftime(timeFormatString))
 
@@ -409,6 +408,9 @@ def main():
         try:
             workoutId, workout = selectWorkout(lastWorkout)
         except UserCancelException as e:
+            continue
+        except ValueError as e:
+            print(e)
             continue
 
         lastWorkout = workout
