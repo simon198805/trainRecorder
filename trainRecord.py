@@ -311,7 +311,7 @@ def getWeightAndRep(lastWeight, lastRep):
     if inputs == '':
         inputs = lastWeight
     if inputs == 'q':
-        raise NameError("user cancel")
+        raise UserCancelException
 
     inputs = inputs.split()
     weight = inputs[0]
@@ -324,7 +324,7 @@ def getWeightAndRep(lastWeight, lastRep):
         if rep == '':
             rep = lastRep
         if rep == 'q':
-            raise NameError("user cancel")
+            raise UserCancelException
     return weight, rep
 
 
@@ -420,9 +420,9 @@ def main():
         while True:
             try:
                 weight, rep = getWeightAndRep(lastWeight, lastRep)
-            except NameError as e:
+            except UserCancelException as e:
                 print(e)
-                continue
+                break
             
             timeStamp = datetime.datetime.now()
             printRecordAndWriteToCsv(timeStamp, workout, weight, rep, lastTimeStamp)
