@@ -14,6 +14,7 @@ workoutNames = []
 categories = {}
 optionJsonData = {'workouts': []}
 workoutSelector = 'category'
+lastSelectCat = ''
 
 def getDatetimeFromStr(strDatetime:str) -> datetime.datetime:
     return datetime.datetime.strptime(strDatetime, timeFormatString)
@@ -83,7 +84,7 @@ def selectFromList(targetList: list, msg: str, defaultSelection: str = '', print
             defaultId = -1
             if defaultSelection in targetList:
                 defaultId = targetList.index(defaultSelection)
-            defaultStr = (' (' + str(defaultId) + ')') if defaultId != -1 else ''
+            defaultStr = (' (' + str(defaultId) + ': ' + defaultSelection + ')') if defaultId != -1 else ''
             inVal = input(msg + defaultStr)
             if inVal.isnumeric():
                 if int(inVal) in range(len(targetList)):
@@ -173,6 +174,7 @@ def processSelectorChange(inVal) -> bool:
         return True
     return False
 
+
 def printCategoriesWithLastWorkoutDelta():
     id = 0
     for cat,catWorkouts in categories.items():
@@ -196,18 +198,21 @@ def selectCategory() -> str:
     Returns:
         int: Selected category id
     """
+    global lastSelectCat
     while True:
         try:
             printCategoriesWithLastWorkoutDelta()
             catKeys = list(categories.keys())
-            inVal = selectFromList(catKeys, 'which category?', printList=False)
+            inVal = selectFromList(catKeys, 'which category?', lastSelectCat, printList=False)
             if processSelectorChange(inVal):
                 raise UserCancelException
             if type(inVal) is int:
-                return catKeys[int(inVal)]
+                lastSelectCat = catKeys[int(inVal)]
+                return lastSelectCat
             else:
                 if(input('Category ' + inVal + 'does not exist, add it?(N/y)') == 'y'):
                     addCategory(inVal)
+                    lastSelectCat = inVal
                     return inVal
         except UserCancelException as e: raise
         except Exception as e:
@@ -216,7 +221,6 @@ def selectCategory() -> str:
 def selectWorkoutByCategory():
     global workoutSelector
     cat = selectCategory()
-    workoutSelector = cat
     selectedCatWorkouts = categories[cat]
     workout = selectFromList(selectedCatWorkouts, 'which workout?')
     workoutId = workoutNames.index(workout)
